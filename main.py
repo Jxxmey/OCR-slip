@@ -61,31 +61,37 @@ origins = [
     "http://localhost:8000",
     "http://localhost:8080",
     "https://ocr-slip.onrender.com", # Replace with your actual Render service URL if different
+    "https://jxxmey.github.io",
+    "https://127.0.0.1",
+    "http://127.0.0.1",
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"]
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # --- OCR Function ---
+import asyncio
+
 async def perform_ocr(image_bytes: bytes) -> str:
-    """Sends an image to Google Cloud Vision API to extract text."""
     if vision_client is None:
-        raise RuntimeError("Google Cloud Vision client is not initialized. Please check GOOGLE_APPLICATION_CREDENTIALS_BASE64 environment variable on Render logs.")
+        raise RuntimeError("Google Cloud Vision client is not initialized.")
     
+    loop = asyncio.get_event_loop()
     image = vision.Image(content=image_bytes)
     try:
-        response = vision_client.text_detection(image=image)
+        response = await loop.run_in_executor(None, vision_client.text_detection, image)
         texts = response.text_annotations
         if texts:
             return texts[0].description
         return ""
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Google Cloud Vision API error during text detection: {e}")
+        raise HTTPException(status_code=500, detail=f"Google Cloud Vision API error: {e}")
+
 
 # --- Parsing Functions ---
 def parse_slip_text(text: str) -> dict:
