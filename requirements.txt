@@ -6,4 +6,3 @@ python-dotenv==1.0.1
 pydantic==2.8.2
 python-multipart==0.0.9 # Essential for file uploads in FastAPI
 pytz
-base64
